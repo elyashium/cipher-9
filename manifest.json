@@ -1,0 +1,21 @@
+{
+    "manifest_version": 3,
+    "name": "cipher-9",
+    "version": "1.0.0",
+    "icons": {
+      "128": "assets/icon.png"
+    },
+    "permissions": ["activeTab", "scripting", "storage"],
+    "host_permissions": ["*://*.youtube.com/*"],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [{
+      "matches": ["*://*.youtube.com/watch*"],
+      "js": ["content.js"],
+      "css": ["styles/chat-styles.css"]
+    }],
+    "action": {
+      "default_popup": "popup/popup.html"
+    }
+  }
