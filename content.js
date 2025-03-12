@@ -190,17 +190,17 @@ async function sendMessage() {
     addMessageToChat('user', message);
     input.value = '';
 
-    // Add loading message
+    // loading message
     const loadingElement = addMessageToChat('system', 'Thinking...');
 
-    // Send message to background script
+    // message to background script
     chrome.runtime.sendMessage({
         action: 'getAIResponse',
         userMessage: message,
         transcript: videoTranscript,
         videoId: currentVideoId
     }, function (response) {
-        // Remove loading message
+        //  loading message
         if (loadingElement && loadingElement.parentNode) {
             loadingElement.parentNode.removeChild(loadingElement);
         }
@@ -215,7 +215,7 @@ async function sendMessage() {
     });
 }
 
-// Add message to chat (returns the element for potential removal)
+// message to chat (returns the element for potential removal)
 function addMessageToChat(type, text) {
     const messagesContainer = document.querySelector('.chat-messages');
     const messageDiv = document.createElement('div');

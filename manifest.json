@@ -12,9 +12,9 @@
       "service_worker": "background.js"
     },
     "content_scripts": [{
-      "matches": ["*://*.youtube.com/watch*"],
+      "matches": ["https://www.youtube.com/*"],
       "js": ["content.js"],
-      "css": ["styles/chat-styles.css"]
+      "run_at" : "document_idle"
     }],
     "action": {
       "default_popup": "popup/popup.html"
