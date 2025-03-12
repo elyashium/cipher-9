@@ -2,21 +2,23 @@
     "manifest_version": 3,
     "name": "cipher-9",
     "version": "1.0.0",
-    "icons": {
-      "128": "assets/icon.png"
-    },
     "permissions": ["activeTab", "scripting", "storage"],
-    "host_permissions": ["*://*.youtube.com/*",
-    "https://*.googleapis.com/*"],
+    "host_permissions": [
+      "*://*.youtube.com/*",
+      "https://*.googleapis.com/*"
+    ],
     "background": {
-      "service_worker": "background.js"
+      "service_worker": "dist/background.bundle.js",
+      "type": "module"
     },
     "content_scripts": [{
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["content.js"],
-      "run_at" : "document_idle"
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["dist/content.bundle.js"]
     }],
     "action": {
       "default_popup": "popup/popup.html"
+    },
+    "content_security_policy": {
+      "extension_pages": "script-src 'self'; object-src 'self'"
     }
-  }
+}

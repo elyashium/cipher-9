@@ -1,0 +1,29 @@
+{
+  "name": "cipher-9",
+  "version": "1.0.0",
+  "description": "A browser extension that adds an intelligent chat widget to YouTube videos, powered by the Gemini API. This extension enhances your video watching experience by providing real-time interaction and content understanding.",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "babel-loader": "^9.1.3",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
+  },
+  "keywords": [
+    "chrome-extension",
+    "youtube",
+    "ai",
+    "gemini"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/cipher-9.git"
+  }
+}

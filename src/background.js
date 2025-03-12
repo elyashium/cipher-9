@@ -107,9 +107,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   throw new Error('Unexpected response format from Gemini API');
               }
           })
-          .catch(error => sendResponse({
-              success: false,
-              error: error.message
+          .catch(error => sendResponse({ 
+              success: false, 
+              error: error.message 
           }));
       });
       return true;
