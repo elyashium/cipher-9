@@ -1,28 +1,86 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Cipher 9 Settings</title>
-    <link rel="stylesheet" href="popup.css">
+    <title>Cipher 9 Options</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Cipher 9 Settings</h1>
-        
-        <div class="form-group">
-            <label for="gemini-api-key">Gemini API Key:</label>
-            <input type="password" id="gemini-api-key" placeholder="Enter your Gemini API key">
-            <a href="https://cloud.google.com/gemini" target="_blank">Get your Gemini API Key</a>
-        </div>
-        
-        <div class="form-group">
-            <label for="youtube-api-key">YouTube API Key:</label>
-            <input type="password" id="youtube-api-key" placeholder="Enter your YouTube API key">
-            <a href="https://console.developers.google.com/" target="_blank">Get your YouTube API Key</a>
-        </div>
-        
-        <button id="save-settings">Save Settings</button>
-        <div id="status-message"></div>
+    <h1>Cipher 9 Configuration</h1>
+
+    <div class="form-group">
+        <label for="geminiApiKey">Gemini API Key:</label>
+        <input type="text" id="geminiApiKey" placeholder="Enter your Gemini API key">
     </div>
-    <script src="popup.js"></script>
+
+    <div class="form-group">
+        <label for="youtubeApiKey">YouTube API Key:</label>
+        <input type="text" id="youtubeApiKey" placeholder="Enter your YouTube API key">
+    </div>
+
+    <button id="saveButton">Save</button>
+
+    <div id="status" class="status" style="display: none;"></div>
+
+    <div class="help-text">
+        <h3>How to get API keys:</h3>
+        <p><strong>Gemini API Key:</strong> Visit <a href="https://aistudio.google.com/app/apikey"
+                target="_blank">Google AI Studio</a> to create your API key.</p>
+        <p><strong>YouTube API Key:</strong> Visit <a href="https://console.cloud.google.com/apis/credentials"
+                target="_blank">Google Cloud Console</a>, create a project, enable YouTube Data API, and create an API
+            key.</p>
+    </div>
+
+    <script src="options.js"></script>
 </body>
+
 </html>

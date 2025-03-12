@@ -1,28 +1,38 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Load saved API keys
     chrome.storage.sync.get(['geminiApiKey', 'youtubeApiKey'], function(result) {
-        if (result.geminiApiKey) {
-            document.getElementById('gemini-api-key').value = result.geminiApiKey;
-        }
-        if (result.youtubeApiKey) {
-            document.getElementById('youtube-api-key').value = result.youtubeApiKey;
-        }
+      document.getElementById('geminiApiKey').value = result.geminiApiKey || '';
+      document.getElementById('youtubeApiKey').value = result.youtubeApiKey || '';
     });
-
+    
     // Save API keys
-    document.getElementById('save-settings').addEventListener('click', function() {
-        const geminiApiKey = document.getElementById('gemini-api-key').value;
-        const youtubeApiKey = document.getElementById('youtube-api-key').value;
-        
-        chrome.storage.sync.set({
-            geminiApiKey: geminiApiKey,
-            youtubeApiKey: youtubeApiKey
-        }, function() {
-            const status = document.getElementById('status-message');
-            status.textContent = 'Settings saved!';
-            setTimeout(() => {
-                status.textContent = '';
-            }, 2000);
-        });
+    document.getElementById('saveButton').addEventListener('click', function() {
+      const geminiApiKey = document.getElementById('geminiApiKey').value.trim();
+      const youtubeApiKey = document.getElementById('youtubeApiKey').value.trim();
+      
+      chrome.runtime.sendMessage(
+        {
+          action: 'saveApiKeys',
+          geminiApiKey: geminiApiKey,
+          youtubeApiKey: youtubeApiKey
+        },
+        function(response) {
+          const statusEl = document.getElementById('status');
+          
+          if (response.success) {
+            statusEl.textContent = 'Settings saved successfully!';
+            statusEl.className = 'status success';
+          } else {
+            statusEl.textContent = 'Error saving settings: ' + response.error;
+            statusEl.className = 'status error';
+          }
+          
+          statusEl.style.display = 'block';
+          
+          setTimeout(function() {
+            statusEl.style.display = 'none';
+          }, 3000);
+        }
+      );
     });
-});
+  });
