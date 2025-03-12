@@ -4,52 +4,178 @@
 <head>
     <title>Cipher 9 Options</title>
     <style>
+        :root {
+            --bg-primary: #1e1e2e;
+            --bg-secondary: #282a36;
+            --text-primary: #f8f8f2;
+            --text-secondary: #6272a4;
+            --accent: #7b68ee;
+            --accent-hover: #6a5acd;
+            --border: rgba(255,255,255,0.1);
+            --success-bg: #44475a;
+            --success-text: #50fa7b;
+            --error-bg: #44475a;
+            --error-text: #ff5555;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            padding: 24px;
+            width: 360px;
+            margin: 0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
         }
-
+        
+        h1 {
+            font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+            text-align: center;
+            position: relative;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(135deg, #7b68ee, #3a86ff);
+            border-radius: 3px;
+        }
+        
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
-
+        
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
         }
-
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
         input[type="text"] {
             width: 100%;
-            padding: 8px;
+            padding: 12px 14px;
             box-sizing: border-box;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s ease;
         }
-
+        
+        input[type="text"]::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(123, 104, 238, 0.2);
+        }
+        
+        .api-help {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .api-help a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .api-help a:hover {
+            text-decoration: underline;
+        }
+        
         button {
-            background-color: #4285f4;
+            background: linear-gradient(135deg, #7b68ee, #3a86ff);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 12px 20px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
+            border-radius: 8px;
+            width: 100%;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-
+        
+        button:hover {
+            background: linear-gradient(135deg, #6a5acd, #2a75ff);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(123, 104, 238, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
         .status {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 4px;
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
         }
-
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .success {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: var(--success-bg);
+            color: var(--success-text);
         }
-
+        
         .error {
-            background-color: #f8d7da;
-            color: #721c24;
+            background-color: var(--error-bg);
+            color: var(--error-text);
+        }
+        
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Icon styles */
+        .icon {
+            width: 18px;
+            height: 18px;
         }
     </style>
 </head>
@@ -58,29 +184,43 @@
     <h1>Cipher 9 Configuration</h1>
 
     <div class="form-group">
-        <label for="geminiApiKey">Gemini API Key:</label>
-        <input type="text" id="geminiApiKey" placeholder="Enter your Gemini API key">
+        <label for="geminiApiKey">Gemini API Key</label>
+        <div class="input-wrapper">
+            <input type="text" id="geminiApiKey" placeholder="Enter your Gemini API key">
+        </div>
+        <span class="api-help">
+            <a href="https://ai.google.dev/" target="_blank">Get a Gemini API key</a>
+        </span>
     </div>
 
     <div class="form-group">
-        <label for="youtubeApiKey">YouTube API Key:</label>
-        <input type="text" id="youtubeApiKey" placeholder="Enter your YouTube API key">
+        <label for="youtubeApiKey">YouTube API Key</label>
+        <div class="input-wrapper">
+            <input type="text" id="youtubeApiKey" placeholder="Enter your YouTube API key">
+        </div>
+        <span class="api-help">
+            <a href="https://developers.google.com/youtube/v3/getting-started" target="_blank">Get a YouTube API key</a>
+        </span>
     </div>
 
-    <button id="saveButton">Save</button>
+    <button id="saveButton">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        Save Configuration
+    </button>
 
     <div id="status" class="status" style="display: none;"></div>
 
-    <div class="help-text">
-        <h3>How to get API keys:</h3>
-        <p><strong>Gemini API Key:</strong> Visit <a href="https://aistudio.google.com/app/apikey"
-                target="_blank">Google AI Studio</a> to create your API key.</p>
-        <p><strong>YouTube API Key:</strong> Visit <a href="https://console.cloud.google.com/apis/credentials"
-                target="_blank">Google Cloud Console</a>, create a project, enable YouTube Data API, and create an API
-            key.</p>
+    <div class="footer">
+        Cipher 9 - YouTube AI Chat Companion
+        <br>
+        <a href="https://github.com/elyashium/cipher-9" target="_blank">View on GitHub</a>
     </div>
 
-    <script src="options.js"></script>
+    <script src="../dist/popup.bundle.js"></script>
 </body>
 
 </html>
