@@ -8,7 +8,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Save API key
     document.getElementById('save-settings').addEventListener('click', function() {
+        console.log('Saving settings...');
         const apiKey = document.getElementById('api-key').value;
+        
         chrome.storage.sync.set({
             geminiApiKey: apiKey
         }, function() {
@@ -18,5 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 status.textContent = '';
             }, 2000);
         });
+
     });
 });

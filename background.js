@@ -2,7 +2,12 @@ chrome.runtime.onInstalled.addListener(() => {
     console.log('Cipher 9 extension installed');
 });
 
+//request: Contains the message sent from the content script, including any data or type information.
+// sender: Provides information about the message sender.
+// sendResponse: A function used to send a response back to the sender.
 // Listen for messages from content script
+
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'GET_API_KEY') {
         chrome.storage.sync.get(['geminiApiKey'], function(result) {
