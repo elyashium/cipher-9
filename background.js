@@ -41,6 +41,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .then(data => sendResponse(data.choices[0].message.content))
       .catch(error => sendResponse({error: error.message}));
       
-      return true; // Keep message channel open
+      return true; 
     }
   });
