@@ -9,6 +9,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+
     if (request.type === 'GET_API_KEY') {
         chrome.storage.sync.get(['geminiApiKey'], function(result) {
             sendResponse({ apiKey: result.geminiApiKey });
@@ -44,3 +45,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true; 
     }
   });
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'getYouTubeData') {
+        chrome.storage.sync.get(['youtubeApiKey'], function(result) {
+            const apiKey = result.youtubeApiKey;
+            if (!apiKey) {
+                sendResponse({ error: 'YouTube API key not set' });
+                return;
+            }
+
+            // Use the API key to make a request
+            fetch(`https://www.googleapis.com/youtube/v3/videos?id=${request.videoId}&part=snippet,contentDetails&key=${apiKey}`)
+                .then(response => response.json())
+                .then(data => sendResponse(data))
+                .catch(error => sendResponse({ error: error.message }));
+        });
+        return true; // Keep the message channel open for async response
+    }
+});
