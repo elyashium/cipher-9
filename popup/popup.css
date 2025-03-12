@@ -1,6 +1,7 @@
 .container {
     width: 300px;
     padding: 20px;
+    font-family: Arial, sans-serif;
 }
 
 h1 {
@@ -16,6 +17,7 @@ h1 {
 label {
     display: block;
     margin-bottom: 5px;
+    font-weight: bold;
 }
 
 input {
@@ -23,6 +25,19 @@ input {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+a {
+    display: block;
+    font-size: 12px;
+    color: #065fd4;
+    text-decoration: none;
+    margin-bottom: 10px;
+}
+
+a:hover {
+    text-decoration: underline;
 }
 
 button {
@@ -42,4 +57,5 @@ button:hover {
 #status-message {
     margin-top: 10px;
     text-align: center;
+    color: green;
 }

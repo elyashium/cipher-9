@@ -7,10 +7,19 @@
 <body>
     <div class="container">
         <h1>Cipher 9 Settings</h1>
+        
         <div class="form-group">
-            <label for="api-key">Enter your Gemini API Key:</label>
-            <input type="password" id="api-key" placeholder="Enter your API key">
+            <label for="gemini-api-key">Gemini API Key:</label>
+            <input type="password" id="gemini-api-key" placeholder="Enter your Gemini API key">
+            <a href="https://cloud.google.com/gemini" target="_blank">Get your Gemini API Key</a>
         </div>
+        
+        <div class="form-group">
+            <label for="youtube-api-key">YouTube API Key:</label>
+            <input type="password" id="youtube-api-key" placeholder="Enter your YouTube API key">
+            <a href="https://console.developers.google.com/" target="_blank">Get your YouTube API Key</a>
+        </div>
+        
         <button id="save-settings">Save Settings</button>
         <div id="status-message"></div>
     </div>
