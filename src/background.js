@@ -78,8 +78,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               request.conversationHistory ? request.conversationHistory.length : 0, 'messages');
           
           // Trim transcript if it's too long (Gemini has token limits)
-          // A rough estimate is 4 characters per token, and we want to leave room for the response
-          const MAX_TRANSCRIPT_CHARS = 20000; // Approximately 5000 tokens
+          const MAX_TRANSCRIPT_CHARS = 20000;
           let transcript = request.transcript || '';
           
           if (transcript.length > MAX_TRANSCRIPT_CHARS) {
@@ -88,11 +87,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   "\n\n[Note: The transcript was trimmed due to length limitations]";
           }
           
+          // Determine if the user's query might require knowledge beyond the video
+          const userQuery = request.userMessage.toLowerCase();
+          const knowledgeExpansionKeywords = [
+              'explain more', 'tell me more', 'elaborate', 'additional', 'background',
+              'how does', 'why does', 'what is', 'who is', 'when did',
+              'explain', 'detail', 'expand', 'beyond', 'further', 'deeper'
+          ];
+          
+          // Check if this appears to be a knowledge expansion question
+          const isKnowledgeExpansion = knowledgeExpansionKeywords.some(keyword => 
+              userQuery.includes(keyword)) || 
+              (request.conversationHistory && request.conversationHistory.length >= 2);
+          
           // Create a more structured prompt with conversation history
           let prompt;
           
           if (request.conversationHistory && request.conversationHistory.length > 0) {
-              // This is a follow-up question, include conversation history
+              // This is a follow-up question, include conversation history and allow knowledge expansion
               prompt = `
                   You are Cipher 9, an advanced AI assistant for YouTube videos.
                   
@@ -109,13 +121,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   ${request.userMessage}
                   
                   RESPONSE GUIDELINES:
-                  1. Structure your response with clear sections using markdown formatting
-                  2. Use bullet points (•) for lists
-                  3. Use bold text for important concepts
-                  4. Break your response into logical paragraphs
-                  5. Refer to information from previous messages when relevant
+                  1. First, try to answer based on information explicitly mentioned in the video.
+                  2. If the video doesn't contain enough information on the topic, or if the user is asking for more details:
+                     - Clearly indicate when you're providing information beyond what's in the video
+                     - Use your general knowledge to provide helpful, accurate information
+                     - Begin sections with "Beyond the video:" when providing additional context
+                  3. Structure your response with clear sections using markdown formatting
+                  4. Use bullet points (•) for lists
+                  5. Use bold text for important concepts
+                  6. Break your response into logical paragraphs
+                  7. Refer to information from previous messages when relevant
                   
-                  Provide a detailed and well-structured response that builds on the conversation so far.
+                  Provide a detailed and well-structured response that builds on the conversation so far. Don't be afraid to go beyond the video content when appropriate to provide a more complete and helpful answer.
               `;
           } else {
               // This is the first question
@@ -129,22 +146,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   ${request.userMessage}
                   
                   RESPONSE GUIDELINES:
-                  1. Structure your response with clear sections using markdown formatting
-                  2. Use bullet points (•) for lists
-                  3. Use bold text for important concepts
-                  4. Break your response into logical paragraphs
-                  5. For summaries, include these sections:
+                  1. First, try to answer based on information explicitly mentioned in the video.
+                  2. If the video doesn't contain enough information on the topic, or if the user is asking for more details:
+                     - Clearly indicate when you're providing information beyond what's in the video
+                     - Use your general knowledge to provide helpful, accurate information
+                     - Begin sections with "Beyond the video:" when providing additional context
+                  3. Structure your response with clear sections using markdown formatting
+                  4. Use bullet points (•) for lists
+                  5. Use bold text for important concepts
+                  6. Break your response into logical paragraphs
+                  7. For summaries, include these sections:
                      - Overview
                      - Key Points
                      - Technical Details (if applicable)
                      - Conclusion
                   
-                  Provide a detailed and well-structured response about the video content. Format your answer to be easy to read with proper headings, paragraphs, and bullet points.
+                  Provide a detailed and well-structured response about the video content. Format your answer to be easy to read with proper headings, paragraphs, and bullet points. Don't be afraid to go beyond the video content when appropriate to provide a more complete and helpful answer.
               `;
           }
           
-          // Make the API request with the potentially trimmed transcript
-          fetch(`https://generativelanguage.googleapis.com/v1beta/models/Gemini-2.5-Pro-Experimental-03-25:generateContent?key=${apiKey}`, {
+          // Updated to use gemini-2.0-flash model
+          fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json'

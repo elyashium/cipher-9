@@ -86,18 +86,18 @@ function createChatWidget() {
             height: 500px;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 255, 196, 0.2), 0 0 30px rgba(0, 183, 255, 0.15);
-            background: #0f1221;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2), 0 0 30px rgba(0, 255, 0, 0.15);
+            background: #000000;
             font-family: 'JetBrains Mono', monospace;
             z-index: 9999;
             transition: all 0.3s ease;
-            border: 1px solid rgba(0, 255, 196, 0.3);
+            border: 1px solid rgba(0, 255, 0, 0.3);
             display: flex;
             flex-direction: column;
         }
         
         #ai-chat-widget:hover {
-            box-shadow: 0 0 25px rgba(0, 255, 196, 0.3), 0 0 35px rgba(0, 183, 255, 0.2);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.3), 0 0 35px rgba(0, 255, 0, 0.2);
         }
         
         .chat-header {
@@ -108,7 +108,7 @@ function createChatWidget() {
             justify-content: space-between;
             align-items: center;
             cursor: move;
-            border-bottom: 1px solid rgba(0, 255, 196, 0.3);
+            border-bottom: 1px solid rgba(0, 255, 0, 0.3);
             position: relative;
             overflow: hidden;
         }
@@ -166,9 +166,9 @@ function createChatWidget() {
         }
         
         .control-button {
-            background: rgba(0, 255, 196, 0.1);
-            border: 1px solid rgba(0, 255, 196, 0.3);
-            color: #00ffc4;
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            color: #00ff00;
             width: 24px;
             height: 24px;
             border-radius: 4px;
@@ -182,7 +182,7 @@ function createChatWidget() {
         }
         
         .control-button:hover {
-            background: rgba(0, 255, 196, 0.2);
+            background: rgba(0, 255, 0, 0.2);
             transform: translateY(-1px);
         }
         
@@ -538,6 +538,31 @@ function createChatWidget() {
             padding: 2px 5px;
             border-radius: 3px;
             opacity: 0.7;
+        }
+        
+        /* Style for beyond-video sections */
+        .message.ai p:contains("Beyond the video:") {
+            border-left: 2px solid #00b7ff;
+            padding-left: 10px;
+            margin-top: 12px;
+            background: rgba(0, 183, 255, 0.05);
+            padding: 8px 10px;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        /* Add a subtle indicator for knowledge expansion */
+        .message.ai h3.response-heading:contains("Beyond the Video"),
+        .message.ai h4.response-heading:contains("Beyond the Video") {
+            color: #00b7ff;
+            display: flex;
+            align-items: center;
+        }
+        
+        .message.ai h3.response-heading:contains("Beyond the Video")::before,
+        .message.ai h4.response-heading:contains("Beyond the Video")::before {
+            content: "↗";
+            margin-right: 6px;
+            font-size: 14px;
         }
     `;
     document.head.appendChild(styles);
@@ -930,3 +955,42 @@ Format your response with clear headings and bullet points.`,
         });
     });
 }
+
+// Add a custom selector for the CSS above
+document.addEventListener('DOMContentLoaded', function() {
+    // Add a contains selector polyfill for the CSS above
+    const style = document.createElement('style');
+    style.textContent = `
+        /* This will be processed by JavaScript to find elements containing text */
+    `;
+    document.head.appendChild(style);
+    
+    // Add a MutationObserver to apply the contains selector functionality
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                // Find all AI message paragraphs
+                const aiParagraphs = document.querySelectorAll('.message.ai p');
+                aiParagraphs.forEach(function(p) {
+                    if (p.textContent.includes('Beyond the video:')) {
+                        p.classList.add('beyond-video-section');
+                    }
+                });
+                
+                // Find all AI message headings
+                const aiHeadings = document.querySelectorAll('.message.ai h3, .message.ai h4');
+                aiHeadings.forEach(function(heading) {
+                    if (heading.textContent.includes('Beyond the Video')) {
+                        heading.classList.add('beyond-video-heading');
+                    }
+                });
+            }
+        });
+    });
+    
+    // Start observing the chat messages container
+    const chatMessages = document.querySelector('.chat-messages');
+    if (chatMessages) {
+        observer.observe(chatMessages, { childList: true, subtree: true });
+    }
+});
