@@ -46,12 +46,19 @@ function createChatWidget() {
                 <span class="chat-title">CIPHER_9 TERMINAL</span>
             </div>
             <div class="chat-controls">
-                <button id="minimize-chat" class="control-button">−</button>
-                <button id="close-chat" class="control-button">×</button>
+                <button id="minimize-chat" class="control-button" title="Minimize">−</button>
+                <button id="close-chat" class="control-button" title="Close">×</button>
             </div>
         </div>
         <div class="chat-messages"></div>
         <div class="chat-input">
+            <button id="summarize-video" class="summarize-button" title="Summarize Video">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="21" y1="6" x2="3" y2="6"></line>
+                    <line x1="17" y1="12" x2="3" y2="12"></line>
+                    <line x1="13" y1="18" x2="3" y2="18"></line>
+                </svg>
+            </button>
             <input type="text" id="chat-input" placeholder="$ query --video">
             <button id="send-message">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -71,7 +78,8 @@ function createChatWidget() {
             position: fixed;
             right: 20px;
             top: 80px;
-            width: 320px;
+            width: 380px;
+            height: 500px;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(0, 255, 196, 0.2), 0 0 30px rgba(0, 183, 255, 0.15);
@@ -80,12 +88,8 @@ function createChatWidget() {
             z-index: 9999;
             transition: all 0.3s ease;
             border: 1px solid rgba(0, 255, 196, 0.3);
-            transform: translate3d(20px, 80px, 0);
-            transition: box-shadow 0.3s ease, opacity 0.3s ease;
-            will-change: transform;
-            left: 0;
-            top: 0;
-            right: auto;
+            display: flex;
+            flex-direction: column;
         }
         
         #ai-chat-widget:hover {
@@ -179,17 +183,13 @@ function createChatWidget() {
         }
         
         .chat-messages {
-            height: 320px;
+            flex: 1;
             overflow-y: auto;
             padding: 16px;
-            background: #0f1221;
-            scrollbar-width: thin;
-            scrollbar-color: #00b7ff #0f1221;
-            background-image: 
-                radial-gradient(rgba(0, 183, 255, 0.1) 1px, transparent 1px),
-                radial-gradient(rgba(0, 255, 196, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: calc(100% - 120px);
         }
         
         .chat-messages::-webkit-scrollbar {
@@ -206,22 +206,12 @@ function createChatWidget() {
         }
         
         .message {
-            margin-bottom: 12px;
             padding: 10px 14px;
             border-radius: 6px;
-            max-width: 85%;
-            word-break: break-word;
-            line-height: 1.4;
-            position: relative;
+            max-width: 90%;
+            line-height: 1.5;
             font-size: 13px;
-            font-family: 'Space Mono', monospace;
-            animation: fadeIn 0.3s ease;
-            border: 1px solid transparent;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            word-wrap: break-word;
         }
         
         .message.user {
@@ -280,6 +270,57 @@ function createChatWidget() {
             padding: 12px;
             background: #0f1221;
             border-top: 1px solid rgba(0, 255, 196, 0.3);
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .summarize-button {
+            background: linear-gradient(135deg, #00b7ff, #0077ff);
+            color: #ffffff;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            position: relative;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(0, 183, 255, 0.3);
+        }
+        
+        .summarize-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 183, 255, 0.5);
+        }
+        
+        .summarize-button:active {
+            transform: translateY(0);
+        }
+        
+        .summarize-button::after {
+            content: "Summarize";
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1b2e;
+            color: #00ffc4;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            border: 1px solid rgba(0, 255, 196, 0.3);
+            z-index: 10;
+        }
+        
+        .summarize-button:hover::after {
+            opacity: 1;
         }
         
         .chat-input input {
@@ -295,31 +336,22 @@ function createChatWidget() {
             font-family: 'Space Mono', monospace;
         }
         
-        .chat-input input::placeholder {
-            color: rgba(0, 255, 196, 0.5);
-        }
-        
-        .chat-input input:focus {
-            border-color: #00ffc4;
-            box-shadow: 0 0 0 2px rgba(0, 255, 196, 0.2);
-        }
-        
-        .chat-input button {
+        .chat-input button#send-message {
             background: linear-gradient(135deg, #00ffc4, #00b7ff);
             color: #0f1221;
             border: none;
             width: 36px;
             height: 36px;
             border-radius: 4px;
-            margin-left: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
         
-        .chat-input button:hover {
+        .chat-input button#send-message:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 255, 196, 0.3);
         }
@@ -359,6 +391,52 @@ function createChatWidget() {
             transition: none;
             cursor: grabbing;
         }
+        
+        #summarize-video {
+            background: rgba(0, 183, 255, 0.2);
+            border: 1px solid rgba(0, 183, 255, 0.4);
+        }
+        
+        #summarize-video:hover {
+            background: rgba(0, 183, 255, 0.3);
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: #1a1b2e;
+            color: #00ffc4;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            border: 1px solid rgba(0, 255, 196, 0.3);
+        }
+        
+        .control-button:hover .tooltip {
+            opacity: 1;
+        }
+        
+        /* Add minimize functionality styles */
+        #ai-chat-widget.minimized {
+            height: 46px !important; /* Header height only */
+            overflow: hidden;
+        }
+        
+        #ai-chat-widget.minimized .chat-messages,
+        #ai-chat-widget.minimized .chat-input {
+            display: none;
+        }
+        
+        /* Rotate minimize button when minimized */
+        #ai-chat-widget.minimized #minimize-chat {
+            transform: rotate(180deg);
+        }
     `;
     document.head.appendChild(styles);
 
@@ -374,6 +452,14 @@ function createChatWidget() {
 
     // Fetch video data and transcript
     fetchVideoData();
+
+    // Restore minimized state if previously minimized
+    chrome.storage.local.get(['chatMinimized'], function(result) {
+        if (result.chatMinimized) {
+            widget.classList.add('minimized');
+            document.getElementById('minimize-chat').textContent = '+';
+        }
+    });
 }
 
 // Make the widget draggable
@@ -471,17 +557,24 @@ function setupEventListeners() {
         if (e.key === 'Enter') sendMessage();
     });
 
-    minimizeButton.addEventListener('click', () => {
-        messagesContainer.style.display =
-            messagesContainer.style.display === 'none' ? 'block' : 'none';
-        document.querySelector('.chat-input').style.display =
-            document.querySelector('.chat-input').style.display === 'none' ? 'flex' : 'none';
-        minimizeButton.textContent =
-            minimizeButton.textContent === '−' ? '+' : '−';
+    minimizeButton.addEventListener('click', function() {
+        widget.classList.toggle('minimized');
+        
+        // Save minimized state
+        const isMinimized = widget.classList.contains('minimized');
+        chrome.storage.local.set({ 'chatMinimized': isMinimized });
+        
+        // Update button text based on state
+        this.textContent = isMinimized ? '+' : '−';
     });
 
     closeButton.addEventListener('click', () => {
         widget.style.display = 'none';
+    });
+
+    // Add summarize button event listener
+    document.getElementById('summarize-video').addEventListener('click', function() {
+        summarizeVideo();
     });
 }
 
@@ -494,7 +587,7 @@ function fetchVideoData() {
         console.log('API key response:', response);
         
         if (!response || !response.apiKey) {
-            addMessageToChat('system', 'Connection established. Ready to analyze video content.');
+            addMessageToChat('system', 'Please set up your API keys in the extension options.');
             return;
         }
 
@@ -506,18 +599,22 @@ function fetchVideoData() {
             console.log('YouTube data response received');
             
             if (response.error) {
-                addMessageToChat('system', 'Error: API authentication required. Please configure API keys.');
+                addMessageToChat('system', 'Error fetching video data: ' + response.error);
                 return;
             }
 
             // Use the full context instead of just title/description
             if (response.fullContext) {
                 videoTranscript = response.fullContext;
-                console.log('Video context set, length:', videoTranscript.length);
-                console.log('First 100 chars:', videoTranscript.substring(0, 100) + '...');
+                
+                // Log only a preview of the transcript for debugging
+                const previewLength = 100;
+                console.log('Video context set, total length:', videoTranscript.length);
+                console.log('First ' + previewLength + ' chars:', 
+                    videoTranscript.substring(0, previewLength) + '...');
 
                 // Show ready message
-                addMessageToChat('system', 'Ready to answer questions about this video!');
+                addMessageToChat('system', 'Connection established. Ready to analyze video content.');
             } else {
                 addMessageToChat('system', 'Could not retrieve video information.');
             }
@@ -541,30 +638,41 @@ async function sendMessage() {
     document.querySelector('.chat-messages').appendChild(typingIndicator);
     document.querySelector('.chat-messages').scrollTop = document.querySelector('.chat-messages').scrollHeight;
 
-    console.log('Sending message to AI:', message);
-    console.log('Video transcript (first 100 chars):', videoTranscript.substring(0, 100) + '...');
+    console.log('Sending message to AI with transcript length:', 
+        videoTranscript ? videoTranscript.length : 0);
 
-    // Send message to background script
-    chrome.runtime.sendMessage({
-        action: 'getAIResponse',
-        userMessage: message,
-        transcript: videoTranscript,
-        videoId: currentVideoId
-    }, function (response) {
-        console.log('AI response:', response);
-        
-        // Remove typing indicator
-        if (typingIndicator && typingIndicator.parentNode) {
-            typingIndicator.parentNode.removeChild(typingIndicator);
+    // First, verify API key
+    chrome.runtime.sendMessage({ type: 'GET_API_KEY' }, function(keyResponse) {
+        if (!keyResponse || !keyResponse.apiKey) {
+            if (typingIndicator && typingIndicator.parentNode) {
+                typingIndicator.parentNode.removeChild(typingIndicator);
+            }
+            addMessageToChat('system', 'Error: API authentication required. Please configure API keys.');
+            return;
         }
 
-        if (response.error) {
-            addMessageToChat('system', 'Error: ' + response.error);
-        } else if (response.content) {
-            addMessageToChat('ai', response.content);
-        } else {
-            addMessageToChat('system', 'Sorry, I couldn\'t generate a response.');
-        }
+        // Send message to background script with full transcript
+        chrome.runtime.sendMessage({
+            action: 'getAIResponse',
+            userMessage: message,
+            transcript: videoTranscript,
+            videoId: currentVideoId
+        }, function(response) {
+            // Remove typing indicator
+            if (typingIndicator && typingIndicator.parentNode) {
+                typingIndicator.parentNode.removeChild(typingIndicator);
+            }
+
+            if (response.error) {
+                console.error('Gemini API Error:', response.error);
+                addMessageToChat('system', 'Error: ' + response.error);
+            } else if (response.content) {
+                addMessageToChat('ai', response.content);
+            } else {
+                console.error('Unexpected response format:', response);
+                addMessageToChat('system', 'Sorry, I couldn\'t generate a response. Please check the console for details.');
+            }
+        });
     });
 }
 
@@ -625,3 +733,56 @@ function initialize() {
 
 // Start the extension
 initialize();
+
+// Add the summarizeVideo function
+function summarizeVideo() {
+    // Check if we have video data
+    if (!videoTranscript) {
+        addMessageToChat('system', 'Error: Video data not loaded yet. Please wait a moment and try again.');
+        return;
+    }
+    
+    // Add user message
+    addMessageToChat('user', 'Summarize this video for me');
+    
+    // Add typing indicator
+    const typingIndicator = document.createElement('div');
+    typingIndicator.className = 'typing-indicator';
+    typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+    document.querySelector('.chat-messages').appendChild(typingIndicator);
+    document.querySelector('.chat-messages').scrollTop = document.querySelector('.chat-messages').scrollHeight;
+    
+    // First, verify API key
+    chrome.runtime.sendMessage({ type: 'GET_API_KEY' }, function(keyResponse) {
+        if (!keyResponse || !keyResponse.apiKey) {
+            if (typingIndicator && typingIndicator.parentNode) {
+                typingIndicator.parentNode.removeChild(typingIndicator);
+            }
+            addMessageToChat('system', 'Error: API authentication required. Please configure API keys.');
+            return;
+        }
+        
+        // Send request to background script
+        chrome.runtime.sendMessage({
+            action: 'getAIResponse',
+            userMessage: 'Please provide a comprehensive summary of this video, including key points, main topics covered, and any important conclusions.',
+            transcript: videoTranscript,
+            videoId: currentVideoId
+        }, function(response) {
+            // Remove typing indicator
+            if (typingIndicator && typingIndicator.parentNode) {
+                typingIndicator.parentNode.removeChild(typingIndicator);
+            }
+            
+            if (response.error) {
+                console.error('Gemini API Error:', response.error);
+                addMessageToChat('system', 'Error: ' + response.error);
+            } else if (response.content) {
+                addMessageToChat('ai', response.content);
+            } else {
+                console.error('Unexpected response format:', response);
+                addMessageToChat('system', 'Sorry, I couldn\'t generate a summary. Please check the console for details.');
+            }
+        });
+    });
+}
