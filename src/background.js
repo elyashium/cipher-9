@@ -31,28 +31,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               return;
           }
 
-          // Fetch video data and try to get captions/transcript
-          fetch(`https://www.googleapis.com/youtube/v3/videos?id=${request.videoId}&part=snippet,contentDetails&key=${apiKey}`)
+          // Fetch video details
+          fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${request.videoId}&key=${apiKey}`)
               .then(response => {
                   if (!response.ok) {
                       throw new Error(`YouTube API error: ${response.status}`);
                   }
                   return response.json();
               })
-              .then(data => {
-                  // After getting video info, fetch captions if available
-                  return fetch(`https://www.googleapis.com/youtube/v3/captions?videoId=${request.videoId}&part=snippet&key=${apiKey}`)
-                      .then(captionResponse => {
-                          if (!captionResponse.ok) {
-                              return { videoData: data, transcript: null };
-                          }
-                          return captionResponse.json().then(captionData => {
-                              return { videoData: data, captionData: captionData };
-                          });
-                      });
+              .then(async data => {
+                  // Try to get transcript (this won't work without OAuth)
+                  const transcriptText = await fetchYouTubeTranscript(request.videoId, apiKey);
+                  
+                  // Combine video data with any transcript info we could get
+                  const videoInfo = data.items[0].snippet;
+                  const fullContext = `
+                      Title: ${videoInfo.title}
+                      Channel: ${videoInfo.channelTitle}
+                      Published: ${videoInfo.publishedAt}
+                      Description: ${videoInfo.description}
+                      ${transcriptText ? `\n\nTranscript: ${transcriptText}` : ''}
+                  `;
+                  
+                  sendResponse({ 
+                      success: true, 
+                      videoData: data,
+                      fullContext: fullContext
+                  });
               })
-              .then(data => sendResponse(data))
-              .catch(error => sendResponse({ error: error.message }));
+              .catch(error => {
+                  sendResponse({ error: error.message });
+              });
       });
       return true;
   }
@@ -126,3 +135,44 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true;
   }
 });
+
+// Add this function to background.js
+async function fetchYouTubeTranscript(videoId, apiKey) {
+    try {
+        // First, get the caption tracks
+        const captionListResponse = await fetch(
+            `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${apiKey}`
+        );
+        
+        if (!captionListResponse.ok) {
+            throw new Error(`Failed to fetch captions: ${captionListResponse.status}`);
+        }
+        
+        const captionData = await captionListResponse.json();
+        
+        if (!captionData.items || captionData.items.length === 0) {
+            return "No captions available for this video.";
+        }
+        
+        // Find English captions or use the first available
+        let captionId = null;
+        const englishCaption = captionData.items.find(
+            item => item.snippet.language === 'en'
+        );
+        
+        if (englishCaption) {
+            captionId = englishCaption.id;
+        } else {
+            captionId = captionData.items[0].id;
+        }
+        
+        // Now fetch the actual transcript
+        // Note: This requires OAuth 2.0, which is complex for extensions
+        // As a workaround, we'll use the video description as context
+        
+        return "Transcript not available through API. Using video metadata instead.";
+    } catch (error) {
+        console.error("Error fetching transcript:", error);
+        return null;
+    }
+}
