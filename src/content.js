@@ -6,6 +6,10 @@ let videoTranscript = '';
 let isDragging = false;
 let offsetX, offsetY;
 
+// Add conversation history tracking
+let conversationHistory = [];
+const MAX_HISTORY_LENGTH = 6; // Keep last 6 messages (3 exchanges)
+
 // Function to extract video ID from YouTube URL
 function getYoutubeVideoId(url) {
     const urlObj = new URL(url);
@@ -437,6 +441,104 @@ function createChatWidget() {
         #ai-chat-widget.minimized #minimize-chat {
             transform: rotate(180deg);
         }
+        
+        /* Formatted message styles */
+        .message.ai p {
+            margin-bottom: 10px;
+        }
+        
+        .message.ai p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .message.ai .response-heading {
+            color: #00ffc4;
+            margin-top: 12px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .message.ai h3.response-heading {
+            font-size: 15px;
+            border-bottom: 1px solid rgba(0, 255, 196, 0.3);
+            padding-bottom: 4px;
+        }
+        
+        .message.ai h4.response-heading {
+            font-size: 14px;
+        }
+        
+        .message.ai .bullet-point {
+            padding-left: 12px;
+            position: relative;
+            margin-bottom: 6px;
+        }
+        
+        .message.ai .numbered-point {
+            padding-left: 20px;
+            position: relative;
+            margin-bottom: 6px;
+        }
+        
+        .message.ai b {
+            color: #00b7ff;
+            font-weight: 600;
+        }
+        
+        /* Add a subtle highlight to code or technical terms */
+        .message.ai code {
+            background: rgba(0, 255, 196, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            border: 1px solid rgba(0, 255, 196, 0.2);
+        }
+        
+        .message-content {
+            width: 100%;
+        }
+        
+        /* Fix any existing styles that might be affected */
+        .message.ai .message-content p {
+            margin-bottom: 10px;
+        }
+        
+        .message.ai .message-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Conversation context indicator */
+        .message.user + .message.ai::before,
+        .message.ai + .message.user::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            width: 1px;
+            height: 20px;
+            background: linear-gradient(to bottom, rgba(0, 255, 196, 0.5), rgba(0, 255, 196, 0.1));
+            top: -10px;
+            z-index: 1;
+        }
+        
+        /* Update message positioning for context lines */
+        .message {
+            position: relative;
+        }
+        
+        /* Add a subtle indicator for follow-up context */
+        .message.user:not(:first-child)::after {
+            content: "follow-up";
+            position: absolute;
+            top: -18px;
+            right: 10px;
+            font-size: 9px;
+            color: rgba(0, 255, 196, 0.7);
+            background: rgba(15, 18, 33, 0.8);
+            padding: 2px 5px;
+            border-radius: 3px;
+            opacity: 0.7;
+        }
     `;
     document.head.appendChild(styles);
 
@@ -638,8 +740,7 @@ async function sendMessage() {
     document.querySelector('.chat-messages').appendChild(typingIndicator);
     document.querySelector('.chat-messages').scrollTop = document.querySelector('.chat-messages').scrollHeight;
 
-    console.log('Sending message to AI with transcript length:', 
-        videoTranscript ? videoTranscript.length : 0);
+    console.log('Sending message to AI with conversation history:', conversationHistory.length, 'messages');
 
     // First, verify API key
     chrome.runtime.sendMessage({ type: 'GET_API_KEY' }, function(keyResponse) {
@@ -651,12 +752,13 @@ async function sendMessage() {
             return;
         }
 
-        // Send message to background script with full transcript
+        // Send message to background script with conversation history
         chrome.runtime.sendMessage({
             action: 'getAIResponse',
             userMessage: message,
             transcript: videoTranscript,
-            videoId: currentVideoId
+            videoId: currentVideoId,
+            conversationHistory: conversationHistory.slice(0, -1) // Send all but the last message (current user message)
         }, function(response) {
             // Remove typing indicator
             if (typingIndicator && typingIndicator.parentNode) {
@@ -676,15 +778,50 @@ async function sendMessage() {
     });
 }
 
-// Add message to chat (returns the element for potential removal)
-function addMessageToChat(type, text) {
+// Update the addMessageToChat function to track conversation history
+function addMessageToChat(sender, message) {
+    // Add to conversation history (except system messages)
+    if (sender !== 'system') {
+        // Add message to history
+        conversationHistory.push({
+            role: sender === 'user' ? 'user' : 'assistant',
+            content: message
+        });
+        
+        // Trim history if it gets too long
+        if (conversationHistory.length > MAX_HISTORY_LENGTH) {
+            conversationHistory = conversationHistory.slice(conversationHistory.length - MAX_HISTORY_LENGTH);
+        }
+        
+        // Log the current conversation history
+        console.log('Conversation history updated:', conversationHistory.length, 'messages');
+    }
+    
+    // Rest of the function remains the same
     const messagesContainer = document.querySelector('.chat-messages');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = text;
-    messagesContainer.appendChild(messageDiv);
+    const messageElement = document.createElement('div');
+    
+    messageElement.className = `message ${sender}`;
+    
+    // Create an inner container for the message content
+    const contentContainer = document.createElement('div');
+    contentContainer.className = 'message-content';
+    
+    // Set the HTML content safely
+    if (sender === 'ai' && (message.includes('<') && message.includes('>'))) {
+        // For AI messages that contain HTML formatting
+        contentContainer.innerHTML = message;
+    } else {
+        // For user messages or system messages, escape HTML
+        contentContainer.textContent = message;
+    }
+    
+    // Add the content container to the message element
+    messageElement.appendChild(contentContainer);
+    messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    return messageDiv;
+    
+    console.log('Added message from', sender, 'with HTML:', sender === 'ai' && message.includes('<'));
 }
 
 // Handle YouTube SPA navigation
@@ -762,12 +899,19 @@ function summarizeVideo() {
             return;
         }
         
-        // Send request to background script
+        // Send request to background script with structured summary request
         chrome.runtime.sendMessage({
             action: 'getAIResponse',
-            userMessage: 'Please provide a comprehensive summary of this video, including key points, main topics covered, and any important conclusions.',
+            userMessage: `Create a structured summary of this video with the following sections:
+1. Overview - What is this video about?
+2. Key Points - What are the main ideas or concepts?
+3. Technical Details - What specific information or techniques were covered?
+4. Conclusion - What were the final takeaways?
+
+Format your response with clear headings and bullet points.`,
             transcript: videoTranscript,
-            videoId: currentVideoId
+            videoId: currentVideoId,
+            conversationHistory: conversationHistory.slice(0, -1) // Send all but the last message
         }, function(response) {
             // Remove typing indicator
             if (typingIndicator && typingIndicator.parentNode) {

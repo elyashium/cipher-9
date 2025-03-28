@@ -74,6 +74,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           // Log the actual transcript length
           console.log('Full transcript length:', 
               request.transcript ? request.transcript.length : 0);
+          console.log('Conversation history:', 
+              request.conversationHistory ? request.conversationHistory.length : 0, 'messages');
           
           // Trim transcript if it's too long (Gemini has token limits)
           // A rough estimate is 4 characters per token, and we want to leave room for the response
@@ -86,29 +88,63 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   "\n\n[Note: The transcript was trimmed due to length limitations]";
           }
           
-          // Create a more structured prompt
-          const prompt = `
-              You are Cipher 9, an advanced AI assistant for YouTube videos.
-              
-              VIDEO CONTEXT:
-              ${transcript}
-              
-              USER QUERY:
-              ${request.userMessage}
-              
-              Provide a detailed and comprehensive response about the video content. Don't be afraid to go into depth when explaining complex topics from the video. Include specific details, examples, and explanations from the video when relevant.
-              
-              If the user is asking for a summary, provide a well-structured summary with:
-              - Main topic and purpose of the video
-              - Key points and concepts covered
-              - Important details and examples
-              - Conclusions or takeaways
-              
-              Format your response with appropriate paragraphs, bullet points, or sections when it improves readability.
-          `;
+          // Create a more structured prompt with conversation history
+          let prompt;
+          
+          if (request.conversationHistory && request.conversationHistory.length > 0) {
+              // This is a follow-up question, include conversation history
+              prompt = `
+                  You are Cipher 9, an advanced AI assistant for YouTube videos.
+                  
+                  VIDEO CONTEXT:
+                  ${transcript}
+                  
+                  CONVERSATION HISTORY:
+                  ${request.conversationHistory.map(msg => 
+                      `${msg.role.toUpperCase()}: ${msg.role === 'assistant' ? 
+                          msg.content.replace(/<[^>]*>/g, '') : msg.content}`
+                  ).join('\n\n')}
+                  
+                  CURRENT USER QUERY:
+                  ${request.userMessage}
+                  
+                  RESPONSE GUIDELINES:
+                  1. Structure your response with clear sections using markdown formatting
+                  2. Use bullet points (•) for lists
+                  3. Use bold text for important concepts
+                  4. Break your response into logical paragraphs
+                  5. Refer to information from previous messages when relevant
+                  
+                  Provide a detailed and well-structured response that builds on the conversation so far.
+              `;
+          } else {
+              // This is the first question
+              prompt = `
+                  You are Cipher 9, an advanced AI assistant for YouTube videos.
+                  
+                  VIDEO CONTEXT:
+                  ${transcript}
+                  
+                  USER QUERY:
+                  ${request.userMessage}
+                  
+                  RESPONSE GUIDELINES:
+                  1. Structure your response with clear sections using markdown formatting
+                  2. Use bullet points (•) for lists
+                  3. Use bold text for important concepts
+                  4. Break your response into logical paragraphs
+                  5. For summaries, include these sections:
+                     - Overview
+                     - Key Points
+                     - Technical Details (if applicable)
+                     - Conclusion
+                  
+                  Provide a detailed and well-structured response about the video content. Format your answer to be easy to read with proper headings, paragraphs, and bullet points.
+              `;
+          }
           
           // Make the API request with the potentially trimmed transcript
-          fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+          fetch(`https://generativelanguage.googleapis.com/v1beta/models/Gemini-2.5-Pro-Experimental-03-25:generateContent?key=${apiKey}`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json'
@@ -121,7 +157,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   }],
                   generationConfig: {
                       temperature: 0.7,
-                      maxOutputTokens: 3500,
+                      maxOutputTokens: 1500,
                       topP: 0.95,
                       topK: 40
                   }
@@ -145,9 +181,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                   data.candidates[0].content.parts && 
                   data.candidates[0].content.parts.length > 0) {
                   
+                  // Get the raw text
+                  const rawText = data.candidates[0].content.parts[0].text;
+                  
+                  // Format the response
+                  const formattedText = formatResponse(rawText);
+                  
                   sendResponse({ 
                       success: true,
-                      content: data.candidates[0].content.parts[0].text
+                      content: formattedText,
+                      rawContent: rawText // Keep the raw content in case needed
                   });
               } else {
                   console.error('Unexpected response format:', data);
@@ -220,4 +263,40 @@ async function fetchYouTubeTranscript(videoId, apiKey) {
         console.error("Error fetching transcript:", error);
         return null;
     }
+}
+
+// Update the formatResponse function to ensure valid HTML
+function formatResponse(text) {
+    // First, escape any HTML that might be in the original text
+    // except for our formatting tags
+    let formatted = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    
+    // Now add our formatting
+    // Replace plain asterisks with HTML bold
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    formatted = formatted.replace(/\*(.*?)\*/g, '<b>$1</b>');
+    
+    // Convert markdown-style headers to styled headers
+    formatted = formatted.replace(/^# (.*?)$/gm, '<h3 class="response-heading">$1</h3>');
+    formatted = formatted.replace(/^## (.*?)$/gm, '<h4 class="response-heading">$1</h4>');
+    
+    // Convert bullet points
+    formatted = formatted.replace(/^- (.*?)$/gm, '<div class="bullet-point">• $1</div>');
+    formatted = formatted.replace(/^\* (.*?)$/gm, '<div class="bullet-point">• $1</div>');
+    
+    // Convert numbered lists
+    formatted = formatted.replace(/^(\d+)\. (.*?)$/gm, '<div class="numbered-point">$1. $2</div>');
+    
+    // Add paragraph breaks
+    formatted = formatted.replace(/\n\n/g, '</p><p>');
+    
+    // Wrap in paragraph tags if not already
+    if (!formatted.startsWith('<')) {
+        formatted = '<p>' + formatted + '</p>';
+    }
+    
+    return formatted;
 }
